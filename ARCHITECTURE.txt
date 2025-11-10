@@ -1,0 +1,234 @@
+# Perfume Pal - Architecture Diagram
+
+## System Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            USER BROWSER                                  │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────┐      │
+│  │                     FRONTEND (Static)                         │      │
+│  │                                                               │      │
+│  │  • HTML5 (index.html)                                        │      │
+│  │  • CSS3 (styles.css) - Tech UI with animations              │      │
+│  │  • JavaScript (app.js) - Form handling & API calls          │      │
+│  │                                                               │      │
+│  │  Components:                                                  │      │
+│  │  - Intro Screen with animated grid                          │      │
+│  │  - Designer Section (form inputs)                           │      │
+│  │  - About Section (documentation)                            │      │
+│  │  - Results Display (recipe cards)                           │      │
+│  └──────────────────────────────────────────────────────────────┘      │
+│                              │                                           │
+│                              │ HTTP/HTTPS                                │
+│                              ▼                                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                               │
+                               │
+                               ▼
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      GOOGLE CLOUD RUN                                    │
+│                   (Serverless Container Platform)                        │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │                  FASTAPI BACKEND (Python 3.11)                  │    │
+│  │                                                                 │    │
+│  │  Endpoints:                                                     │    │
+│  │  • GET  /                 → Serve frontend (index.html)       │    │
+│  │  • GET  /health           → Health check                       │    │
+│  │  • POST /api/generate_blends → Trigger AI workflow           │    │
+│  │                                                                 │    │
+│  │  Components:                                                    │    │
+│  │  • main.py - FastAPI app with routes                          │    │
+│  │  • Pydantic models for validation                             │    │
+│  │  • Static file serving                                         │    │
+│  │  • CORS middleware                                             │    │
+│  │  • Error handling                                              │    │
+│  └─────────────────────────────┬──────────────────────────────────┘    │
+│                                 │                                        │
+│                                 │ Async call                             │
+│                                 ▼                                        │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │              MULTI-AGENT WORKFLOW (agents/workflow.py)          │    │
+│  │                                                                 │    │
+│  │  ┌──────────────────────────────────────────────────────┐     │    │
+│  │  │         AGENT 1: SCENT PLANNER                        │     │    │
+│  │  │                                                       │     │    │
+│  │  │  • Analyzes user preferences                        │     │    │
+│  │  │  • Creates structured brief (JSON)                  │     │    │
+│  │  │  • Defines:                                         │     │    │
+│  │  │    - Target scent profile                          │     │    │
+│  │  │    - Note families (woody, citrus, etc.)          │     │    │
+│  │  │    - Intensity level                               │     │    │
+│  │  │    - Constraints (prefer user ingredients, etc.)   │     │    │
+│  │  │                                                       │     │    │
+│  │  │  Model: gemini-flash-latest                        │     │    │
+│  │  │  Mode: JSON output (response_mime_type)            │     │    │
+│  │  └───────────────────┬───────────────────────────────┘     │    │
+│  │                      │                                       │    │
+│  │                      │ Brief (JSON)                         │    │
+│  │                      ▼                                       │    │
+│  │  ┌──────────────────────────────────────────────────────┐  │    │
+│  │  │         AGENT 2: FORMULA ARCHITECT                    │  │    │
+│  │  │                                                       │  │    │
+│  │  │  • Receives brief from Agent 1                      │  │    │
+│  │  │  • Generates perfume recipes (JSON)                 │  │    │
+│  │  │  • Creates for each recipe:                         │  │    │
+│  │  │    - Name & description                             │  │    │
+│  │  │    - Top/Heart/Base notes                          │  │    │
+│  │  │    - Ingredients with %                            │  │    │
+│  │  │    - Drop counts for bottle size                   │  │    │
+│  │  │    - Mixing instructions                           │  │    │
+│  │  │    - Carrier oil recommendation                    │  │    │
+│  │  │    - Safety notes                                  │  │    │
+│  │  │                                                       │  │    │
+│  │  │  Model: gemini-flash-latest                        │  │    │
+│  │  │  Mode: JSON output (response_mime_type)            │  │    │
+│  │  └───────────────────┬───────────────────────────────┘  │    │
+│  │                      │                                    │    │
+│  │                      │ Recipes (JSON)                    │    │
+│  │                      ▼                                    │    │
+│  └────────────────────────────────────────────────────────────────┘    │
+│                                 │                                        │
+│                                 │                                        │
+└─────────────────────────────────┼────────────────────────────────────────┘
+                                  │
+                                  │ API Call
+                                  ▼
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      GOOGLE GEMINI API                                   │
+│                   (Generative AI Service)                                │
+│                                                                          │
+│  • Model: gemini-flash-latest                                           │
+│  • Temperature: 0.7                                                      │
+│  • Max Tokens: 1024 (Scent Planner), 3072 (Formula Architect)          │
+│  • Response Type: application/json                                       │
+│  • Authentication: API Key (GOOGLE_API_KEY env var)                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+                         DEPLOYMENT & INFRASTRUCTURE
+═══════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         DOCKER CONTAINER                                 │
+│                                                                          │
+│  Base Image: python:3.11-slim                                           │
+│                                                                          │
+│  Contents:                                                               │
+│  • Python dependencies (requirements.txt)                               │
+│    - fastapi==0.115.5                                                   │
+│    - uvicorn[standard]==0.32.1                                          │
+│    - google-generativeai==0.8.3                                         │
+│    - pydantic==2.10.3                                                   │
+│  • Application code (app/, agents/, frontend/)                          │
+│  • Environment variables (GOOGLE_API_KEY, PORT)                         │
+│                                                                          │
+│  Entry Point: uvicorn app.main:app --host 0.0.0.0 --port 8080          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                               │
+                               │ Deployed to
+                               ▼
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      GOOGLE CLOUD RUN                                    │
+│                                                                          │
+│  • Auto-scaling: 0 to N instances                                       │
+│  • Memory: 512Mi                                                         │
+│  • CPU: 1 vCPU                                                          │
+│  • Timeout: 300s                                                         │
+│  • Port: 8080                                                            │
+│  • HTTPS: Automatic SSL certificate                                     │
+│  • URL: https://perfume-pal-xxxxx.run.app                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+                            DATA FLOW SEQUENCE
+═══════════════════════════════════════════════════════════════════════════
+
+1. User fills form on frontend
+   ↓
+2. JavaScript sends POST /api/generate_blends with JSON:
+   {
+     "style": "dark oud",
+     "strength": "moderate",
+     "bottle_size_ml": 10,
+     "vibe_words": ["smoky", "warm"],
+     "user_ingredients": ["oud", "sandalwood"]
+   }
+   ↓
+3. FastAPI validates request with Pydantic
+   ↓
+4. Calls run_blend_workflow() async function
+   ↓
+5. AGENT 1 (Scent Planner):
+   - Sends prompt to Gemini API
+   - Receives structured brief (JSON)
+   ↓
+6. AGENT 2 (Formula Architect):
+   - Takes brief from Agent 1
+   - Sends prompt to Gemini API
+   - Receives recipes (JSON)
+   ↓
+7. FastAPI returns recipes to frontend
+   ↓
+8. JavaScript renders recipe cards in UI
+
+
+═══════════════════════════════════════════════════════════════════════════
+                         KEY TECHNOLOGIES USED
+═══════════════════════════════════════════════════════════════════════════
+
+FRONTEND:
+• HTML5, CSS3, JavaScript (ES6+)
+• Orbitron & Rajdhani fonts
+• CSS animations and clip-path
+• Fetch API for HTTP requests
+
+BACKEND:
+• Python 3.11
+• FastAPI (async web framework)
+• Pydantic (data validation)
+• Uvicorn (ASGI server)
+
+AI/ML:
+• Google Gemini API (gemini-flash-latest)
+• Google Generative AI SDK
+• Google Agent Development Kit (ADK)
+• JSON mode for structured outputs
+
+INFRASTRUCTURE:
+• Google Cloud Run (serverless)
+• Docker (containerization)
+• Cloud Build (CI/CD)
+• Environment variables for secrets
+
+DEVELOPMENT:
+• Git & GitHub (version control)
+• pytest (testing framework)
+• Python virtual environment
+
+
+═══════════════════════════════════════════════════════════════════════════
+                         SECURITY & CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════
+
+Environment Variables (set in Cloud Run):
+• GOOGLE_API_KEY: Gemini API authentication
+• GOOGLE_CLOUD_PROJECT: GCP project identifier
+• PORT: 8080 (automatically set by Cloud Run)
+
+Security Features:
+• API key stored as environment variable (not in code)
+• CORS configured for allowed origins
+• Input validation with Pydantic models
+• Error handling and sanitization
+• HTTPS enforced by Cloud Run
+• No user data stored or logged
+```
