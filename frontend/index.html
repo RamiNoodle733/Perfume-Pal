@@ -3,149 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfume Pal 🌸 - AI Fragrance Designer</title>
+    <title>Perfume Pal - AI Fragrance Designer</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>🌸 Perfume Pal</h1>
-            <p class="tagline">AI-Powered Fragrance Design Assistant</p>
-            <p class="description">
-                Create custom perfume oil blends with AI. Describe your desired scent, 
-                and our multi-agent system will generate detailed recipes ready to mix at home.
-            </p>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Input Form -->
-            <section class="input-section">
-                <h2>Design Your Fragrance</h2>
-                
-                <form id="perfume-form">
-                    <!-- Scent Style -->
-                    <div class="form-group">
-                        <label for="style">Scent Style *</label>
-                        <select id="style" name="style" required>
-                            <option value="">Choose a style...</option>
-                            <option value="dark oud">Dark Oud - Deep, woody, mysterious</option>
-                            <option value="fresh citrus">Fresh Citrus - Bright, energizing, clean</option>
-                            <option value="sweet gourmand">Sweet Gourmand - Warm, edible, comforting</option>
-                            <option value="clean musk">Clean Musk - Soft, powdery, elegant</option>
-                            <option value="floral romance">Floral Romance - Romantic, feminine, delicate</option>
-                            <option value="spicy oriental">Spicy Oriental - Exotic, warm, sensual</option>
-                            <option value="green herbal">Green Herbal - Natural, earthy, fresh</option>
-                            <option value="custom">Custom (enter below)</option>
-                        </select>
-                        <input 
-                            type="text" 
-                            id="custom-style" 
-                            name="custom-style" 
-                            placeholder="Enter your custom style..."
-                            style="display: none; margin-top: 8px;"
-                        >
-                    </div>
-
-                    <!-- Strength -->
-                    <div class="form-group">
-                        <label for="strength">Fragrance Strength *</label>
-                        <select id="strength" name="strength" required>
-                            <option value="">Choose strength...</option>
-                            <option value="subtle">Subtle - Light and delicate</option>
-                            <option value="moderate" selected>Moderate - Balanced presence</option>
-                            <option value="strong">Strong - Bold and long-lasting</option>
-                        </select>
-                    </div>
-
-                    <!-- Bottle Size -->
-                    <div class="form-group">
-                        <label for="bottle-size">Bottle Size (ml) *</label>
-                        <input 
-                            type="number" 
-                            id="bottle-size" 
-                            name="bottle-size" 
-                            min="5" 
-                            max="100" 
-                            value="10" 
-                            required
-                        >
-                        <small>Between 5-100ml. 1ml ≈ 20 drops</small>
-                    </div>
-
-                    <!-- Vibe Words -->
-                    <div class="form-group">
-                        <label for="vibe-words">Vibe Words (optional)</label>
-                        <input 
-                            type="text" 
-                            id="vibe-words" 
-                            name="vibe-words" 
-                            placeholder="e.g., smoky, warm, mysterious, fresh"
-                        >
-                        <small>Comma-separated descriptive words</small>
-                    </div>
-
-                    <!-- User Ingredients -->
-                    <div class="form-group">
-                        <label for="user-ingredients">Your Ingredients (optional)</label>
-                        <textarea 
-                            id="user-ingredients" 
-                            name="user-ingredients" 
-                            rows="3"
-                            placeholder="e.g., oud, sandalwood, bergamot, vanilla, rose"
-                        ></textarea>
-                        <small>List materials you already own (comma-separated)</small>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" id="generate-btn" class="btn-primary">
-                        ✨ Generate Recipes
-                    </button>
-                </form>
-            </section>
-
-            <!-- Loading State -->
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>Our AI agents are crafting your perfect fragrance...</p>
-                <p class="loading-detail">Agent 1: Analyzing preferences... ✓</p>
-                <p class="loading-detail">Agent 2: Generating formulas...</p>
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="intro-content">
+            <div class="logo-container">
+                <img src="/static/logo.png" alt="Perfume Pal Logo" class="intro-logo">
             </div>
-
-            <!-- Error Message -->
-            <div id="error-message" class="error-message" style="display: none;">
-                <h3>⚠️ Oops!</h3>
-                <p id="error-text"></p>
-                <button onclick="document.getElementById('error-message').style.display='none'" class="btn-secondary">
-                    Dismiss
-                </button>
-            </div>
-
-            <!-- Results Section -->
-            <section id="results-section" class="results-section" style="display: none;">
-                <div class="results-header">
-                    <h2>Your Custom Fragrance Recipes</h2>
-                    <button onclick="window.print()" class="btn-secondary">🖨️ Print Recipes</button>
+            <h1 class="intro-title">PERFUME PAL</h1>
+            <p class="intro-subtitle">AI-POWERED FRAGRANCE DESIGN SYSTEM</p>
+            <div class="intro-features">
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <span>Multi-Agent AI</span>
                 </div>
-                
-                <div id="recipes-container"></div>
-            </section>
-        </main>
+                <div class="feature-item">
+                    <span class="feature-icon">🧪</span>
+                    <span>Custom Formulations</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <span>Precision Blending</span>
+                </div>
+            </div>
+            <button id="enter-btn" class="enter-btn">
+                <span class="btn-text">ENTER SYSTEM</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </div>
+        <div class="tech-grid"></div>
+    </div>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>
-                Built with ❤️ for the 
-                <a href="https://run.devpost.com" target="_blank">Google Cloud Run Hackathon 2025</a>
-            </p>
-            <p class="tech-stack">
-                Powered by Google Cloud Run • Google ADK • Gemini AI • FastAPI
-            </p>
-            <p class="disclaimer">
-                ⚠️ <strong>Disclaimer:</strong> These recipes are for educational and hobbyist purposes only. 
-                Always patch test, follow safety guidelines, and consult IFRA standards for cosmetic use.
-            </p>
+    <!-- Main App -->
+    <div id="main-app" class="main-app hidden">
+        <nav class="top-nav">
+            <div class="nav-logo">
+                <img src="/static/logo.png" alt="Perfume Pal" class="nav-logo-img">
+                <span class="nav-brand">PERFUME PAL</span>
+            </div>
+            <div class="nav-links">
+                <a href="#designer" class="nav-link active" data-section="designer">DESIGNER</a>
+                <a href="#about" class="nav-link" data-section="about">ABOUT</a>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Designer Section -->
+            <section id="designer-section" class="section active">
+                <header class="section-header">
+                    <h1 class="main-title">FRAGRANCE DESIGNER</h1>
+                    <p class="main-subtitle">Advanced AI-driven perfume formulation system</p>
+                </header>
+
+                <main class="main-content">
+                    <form id="perfume-form" class="tech-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="style" class="form-label">
+                                    <span class="label-icon">🎨</span>
+                                    PERFUME STYLE
+                                </label>
+                                <select id="style" name="style" required class="form-input">
+                                    <option value="">SELECT STYLE...</option>
+                                    <option value="dark oud">DARK OUD</option>
+                                    <option value="fresh citrus">FRESH CITRUS</option>
+                                    <option value="sweet gourmand">SWEET GOURMAND</option>
+                                    <option value="clean musk">CLEAN MUSK</option>
+                                    <option value="floral romance">FLORAL ROMANCE</option>
+                                    <option value="spicy oriental">SPICY ORIENTAL</option>
+                                    <option value="green herbal">GREEN HERBAL</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="strength" class="form-label">
+                                    <span class="label-icon">💪</span>
+                                    FRAGRANCE STRENGTH
+                                </label>
+                                <select id="strength" name="strength" required class="form-input">
+                                    <option value="">SELECT STRENGTH...</option>
+                                    <option value="subtle">SUBTLE</option>
+                                    <option value="moderate">MODERATE</option>
+                                    <option value="strong">STRONG</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bottle-size" class="form-label">
+                                    <span class="label-icon">⚗️</span>
+                                    BOTTLE SIZE (ML)
+                                </label>
+                                <input type="number" id="bottle-size" name="bottle-size" min="5" max="100" value="10" required class="form-input">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="vibe-words" class="form-label">
+                                    <span class="label-icon">✨</span>
+                                    VIBE WORDS
+                                </label>
+                                <input type="text" id="vibe-words" name="vibe-words" placeholder="e.g., elegant, mysterious, fresh" class="form-input">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="user-ingredients" class="form-label">
+                                    <span class="label-icon">🧪</span>
+                                    YOUR INGREDIENTS (OPTIONAL)
+                                </label>
+                                <textarea id="user-ingredients" name="user-ingredients" rows="3" placeholder="e.g., lavender, vanilla, bergamot" class="form-input"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submit-btn">
+                            <span class="btn-text">GENERATE FORMULA</span>
+                            <span class="btn-loader hidden">⚡ PROCESSING...</span>
+                            <span class="btn-glow"></span>
+                        </button>
+                    </form>
+
+                    <div id="results" class="results hidden">
+                        <h2 class="results-title">FORMULATION RESULTS</h2>
+                        <div id="recipes-container" class="recipes-grid"></div>
+                    </div>
+                </main>
+            </section>
+
+            <!-- About Section -->
+            <section id="about-section" class="section">
+                <div class="about-content">
+                    <h1 class="section-title">ABOUT THE SYSTEM</h1>
+                    
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <div class="card-icon">🤖</div>
+                            <h3>MULTI-AGENT AI ARCHITECTURE</h3>
+                            <p>Perfume Pal utilizes Google's Agent Development Kit (ADK) with two specialized AI agents working in tandem:</p>
+                            <ul>
+                                <li><strong>Scent Planner Agent:</strong> Analyzes your preferences and creates a structured fragrance brief</li>
+                                <li><strong>Formula Architect Agent:</strong> Generates precise, mixable perfume recipes with ingredient proportions</li>
+                            </ul>
+                        </div>
+
+                        <div class="about-card">
+                            <div class="card-icon">⚡</div>
+                            <h3>POWERED BY GOOGLE CLOUD</h3>
+                            <p>Built for the Google Cloud Run Hackathon 2025, leveraging cutting-edge cloud infrastructure:</p>
+                            <ul>
+                                <li><strong>Google Cloud Run:</strong> Serverless deployment platform</li>
+                                <li><strong>Google Gemini AI:</strong> Advanced language models for intelligent formulation</li>
+                                <li><strong>FastAPI:</strong> High-performance Python backend</li>
+                            </ul>
+                        </div>
+
+                        <div class="about-card">
+                            <div class="card-icon">🧪</div>
+                            <h3>INTELLIGENT FORMULATION</h3>
+                            <p>Our AI agents collaborate to create perfumes that are:</p>
+                            <ul>
+                                <li><strong>Balanced:</strong> Proper top, heart, and base note proportions</li>
+                                <li><strong>Practical:</strong> Using real essential oils and aroma compounds</li>
+                                <li><strong>Customized:</strong> Tailored to your specific preferences and available ingredients</li>
+                                <li><strong>Safe:</strong> Includes safety notes and mixing instructions</li>
+                            </ul>
+                        </div>
+
+                        <div class="about-card">
+                            <div class="card-icon">🎯</div>
+                            <h3>HOW IT WORKS</h3>
+                            <ol>
+                                <li>Select your preferred fragrance style and strength</li>
+                                <li>Provide vibe words and any ingredients you have</li>
+                                <li>Agent 1 creates a structured perfume brief</li>
+                                <li>Agent 2 generates detailed recipes with precise measurements</li>
+                                <li>Receive professional-grade formulations ready to mix</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="tech-stack">
+                        <h3>TECHNOLOGY STACK</h3>
+                        <div class="tech-badges">
+                            <span class="tech-badge">Python 3.13</span>
+                            <span class="tech-badge">Google Gemini</span>
+                            <span class="tech-badge">Google Cloud Run</span>
+                            <span class="tech-badge">FastAPI</span>
+                            <span class="tech-badge">Google ADK</span>
+                            <span class="tech-badge">Pydantic</span>
+                        </div>
+                    </div>
+
+                    <div class="disclaimer-box">
+                        <h4>⚠️ IMPORTANT DISCLAIMER</h4>
+                        <p>This application is for educational and experimental purposes only. Always conduct patch tests, consult professional perfumers for commercial formulations, and follow proper safety protocols when working with essential oils and fragrance materials.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="tech-footer">
+            <div class="footer-content">
+                <p class="footer-text">POWERED BY GOOGLE CLOUD RUN & GOOGLE GEMINI AI</p>
+                <p class="footer-copyright">© 2025 Perfume Pal | Cloud Run Hackathon 2025</p>
+            </div>
         </footer>
     </div>
 

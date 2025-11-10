@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfume Pal 🌸 - AI Fragrance Designer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌸 Perfume Pal</h1>
+            <p class="tagline">AI-Powered Fragrance Design Assistant</p>
+            <p class="description">
+                Create custom perfume oil blends with AI. Describe your desired scent, 
+                and our multi-agent system will generate detailed recipes ready to mix at home.
+            </p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Form -->
+            <section class="input-section">
+                <h2>Design Your Fragrance</h2>
+                
+                <form id="perfume-form">
+                    <!-- Scent Style -->
+                    <div class="form-group">
+                        <label for="style">Scent Style *</label>
+                        <select id="style" name="style" required>
+                            <option value="">Choose a style...</option>
+                            <option value="dark oud">Dark Oud - Deep, woody, mysterious</option>
+                            <option value="fresh citrus">Fresh Citrus - Bright, energizing, clean</option>
+                            <option value="sweet gourmand">Sweet Gourmand - Warm, edible, comforting</option>
+                            <option value="clean musk">Clean Musk - Soft, powdery, elegant</option>
+                            <option value="floral romance">Floral Romance - Romantic, feminine, delicate</option>
+                            <option value="spicy oriental">Spicy Oriental - Exotic, warm, sensual</option>
+                            <option value="green herbal">Green Herbal - Natural, earthy, fresh</option>
+                            <option value="custom">Custom (enter below)</option>
+                        </select>
+                        <input 
+                            type="text" 
+                            id="custom-style" 
+                            name="custom-style" 
+                            placeholder="Enter your custom style..."
+                            style="display: none; margin-top: 8px;"
+                        >
+                    </div>
+
+                    <!-- Strength -->
+                    <div class="form-group">
+                        <label for="strength">Fragrance Strength *</label>
+                        <select id="strength" name="strength" required>
+                            <option value="">Choose strength...</option>
+                            <option value="subtle">Subtle - Light and delicate</option>
+                            <option value="moderate" selected>Moderate - Balanced presence</option>
+                            <option value="strong">Strong - Bold and long-lasting</option>
+                        </select>
+                    </div>
+
+                    <!-- Bottle Size -->
+                    <div class="form-group">
+                        <label for="bottle-size">Bottle Size (ml) *</label>
+                        <input 
+                            type="number" 
+                            id="bottle-size" 
+                            name="bottle-size" 
+                            min="5" 
+                            max="100" 
+                            value="10" 
+                            required
+                        >
+                        <small>Between 5-100ml. 1ml ≈ 20 drops</small>
+                    </div>
+
+                    <!-- Vibe Words -->
+                    <div class="form-group">
+                        <label for="vibe-words">Vibe Words (optional)</label>
+                        <input 
+                            type="text" 
+                            id="vibe-words" 
+                            name="vibe-words" 
+                            placeholder="e.g., smoky, warm, mysterious, fresh"
+                        >
+                        <small>Comma-separated descriptive words</small>
+                    </div>
+
+                    <!-- User Ingredients -->
+                    <div class="form-group">
+                        <label for="user-ingredients">Your Ingredients (optional)</label>
+                        <textarea 
+                            id="user-ingredients" 
+                            name="user-ingredients" 
+                            rows="3"
+                            placeholder="e.g., oud, sandalwood, bergamot, vanilla, rose"
+                        ></textarea>
+                        <small>List materials you already own (comma-separated)</small>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="generate-btn" class="btn-primary">
+                        ✨ Generate Recipes
+                    </button>
+                </form>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Our AI agents are crafting your perfect fragrance...</p>
+                <p class="loading-detail">Agent 1: Analyzing preferences... ✓</p>
+                <p class="loading-detail">Agent 2: Generating formulas...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="error-message" style="display: none;">
+                <h3>⚠️ Oops!</h3>
+                <p id="error-text"></p>
+                <button onclick="document.getElementById('error-message').style.display='none'" class="btn-secondary">
+                    Dismiss
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <section id="results-section" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Your Custom Fragrance Recipes</h2>
+                    <button onclick="window.print()" class="btn-secondary">🖨️ Print Recipes</button>
+                </div>
+                
+                <div id="recipes-container"></div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                Built with ❤️ for the 
+                <a href="https://run.devpost.com" target="_blank">Google Cloud Run Hackathon 2025</a>
+            </p>
+            <p class="tech-stack">
+                Powered by Google Cloud Run • Google ADK • Gemini AI • FastAPI
+            </p>
+            <p class="disclaimer">
+                ⚠️ <strong>Disclaimer:</strong> These recipes are for educational and hobbyist purposes only. 
+                Always patch test, follow safety guidelines, and consult IFRA standards for cosmetic use.
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

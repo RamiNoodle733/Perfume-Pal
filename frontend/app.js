@@ -1,41 +1,82 @@
 /**
- * Perfume Pal - Frontend JavaScript
- * Handles form submission, API calls, and results display
+ * Perfume Pal - Frontend JavaScript (Tech UI)
+ * Handles intro screen, navigation, form submission, and results display
  */
 
 // Configuration
 const API_BASE_URL = window.location.origin;
 
-// DOM Elements
+// State
+let currentSection = 'designer';
+
+// DOM Elements - Intro
+const introScreen = document.getElementById('intro-screen');
+const mainApp = document.getElementById('main-app');
+const enterBtn = document.getElementById('enter-btn');
+
+// DOM Elements - Navigation
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section');
+
+// DOM Elements - Form
 const form = document.getElementById('perfume-form');
-const styleSelect = document.getElementById('style');
-const customStyleInput = document.getElementById('custom-style');
-const generateBtn = document.getElementById('generate-btn');
-const loadingDiv = document.getElementById('loading');
-const errorDiv = document.getElementById('error-message');
-const errorText = document.getElementById('error-text');
-const resultsSection = document.getElementById('results-section');
+const submitBtn = document.getElementById('submit-btn');
+const btnText = submitBtn.querySelector('.btn-text');
+const btnLoader = submitBtn.querySelector('.btn-loader');
+
+// DOM Elements - Results
+const results = document.getElementById('results');
 const recipesContainer = document.getElementById('recipes-container');
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Perfume Pal loaded successfully');
+    console.log('✨ Perfume Pal Tech UI loaded successfully');
     
-    // Style select change handler
-    styleSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
-            customStyleInput.style.display = 'block';
-            customStyleInput.required = true;
-        } else {
-            customStyleInput.style.display = 'none';
-            customStyleInput.required = false;
-            customStyleInput.value = '';
-        }
+    // Intro screen
+    enterBtn.addEventListener('click', enterSystem);
+    
+    // Navigation
+    navLinks.forEach(link => {
+        link.addEventListener('click', handleNavigation);
     });
     
-    // Form submit handler
+    // Form submission
     form.addEventListener('submit', handleFormSubmit);
 });
+
+/**
+ * Enter the main system from intro screen
+ */
+function enterSystem() {
+    introScreen.classList.add('hidden');
+    mainApp.classList.remove('hidden');
+    
+    // Smooth fade in effect
+    mainApp.style.opacity = '0';
+    setTimeout(() => {
+        mainApp.style.transition = 'opacity 0.5s ease';
+        mainApp.style.opacity = '1';
+    }, 50);
+}
+
+/**
+ * Handle navigation between sections
+ */
+function handleNavigation(e) {
+    e.preventDefault();
+    
+    const targetSection = e.target.dataset.section;
+    
+    // Update nav links
+    navLinks.forEach(link => link.classList.remove('active'));
+    e.target.classList.add('active');
+    
+    // Update sections
+    sections.forEach(section => section.classList.remove('active'));
+    document.getElementById(`${targetSection}-section`).classList.add('active');
+    
+    currentSection = targetSection;
+}
 
 /**
  * Handle form submission
@@ -43,300 +84,310 @@ document.addEventListener('DOMContentLoaded', () => {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    // Hide previous results/errors
-    hideError();
-    hideResults();
+    // Hide previous results
+    results.classList.add('hidden');
     
     // Get form data
-    const formData = getFormData();
+    const formData = {
+        style: document.getElementById('style').value,
+        strength: document.getElementById('strength').value,
+        bottle_size_ml: parseInt(document.getElementById('bottle-size').value),
+        vibe_words: document.getElementById('vibe-words').value
+            .split(',')
+            .map(w => w.trim())
+            .filter(w => w),
+        user_ingredients: document.getElementById('user-ingredients').value
+            .split(',')
+            .map(i => i.trim())
+            .filter(i => i)
+    };
     
     // Validate
-    if (!validateFormData(formData)) {
+    if (!formData.style || !formData.strength) {
+        showError('Please fill in all required fields');
         return;
     }
     
-    // Show loading
-    showLoading();
+    // Show loading state
+    setLoadingState(true);
     
     try {
-        // Call API
-        const recipes = await generateBlends(formData);
+        console.log('🚀 Sending request to API...', formData);
+        
+        const response = await fetch(`${API_BASE_URL}/api/generate_blends`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || 'Failed to generate blends');
+        }
+        
+        console.log('✅ Received recipes:', data);
         
         // Display results
-        displayRecipes(recipes);
-        
-        // Scroll to results
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        displayRecipes(data.recipes);
         
     } catch (error) {
-        console.error('Error generating blends:', error);
-        showError(error.message || 'Failed to generate recipes. Please try again.');
+        console.error('❌ Error:', error);
+        showError(error.message);
     } finally {
-        hideLoading();
+        setLoadingState(false);
     }
 }
 
 /**
- * Get form data as object
+ * Set loading state for submit button
  */
-function getFormData() {
-    const style = styleSelect.value === 'custom' 
-        ? customStyleInput.value.trim() 
-        : styleSelect.value;
-    
-    const strength = document.getElementById('strength').value;
-    const bottleSize = parseInt(document.getElementById('bottle-size').value, 10);
-    
-    const vibeWordsRaw = document.getElementById('vibe-words').value.trim();
-    const vibeWords = vibeWordsRaw 
-        ? vibeWordsRaw.split(',').map(w => w.trim()).filter(w => w)
-        : [];
-    
-    const userIngredientsRaw = document.getElementById('user-ingredients').value.trim();
-    const userIngredients = userIngredientsRaw
-        ? userIngredientsRaw.split(',').map(i => i.trim()).filter(i => i)
-        : [];
-    
-    return {
-        style,
-        strength,
-        bottle_size_ml: bottleSize,
-        vibe_words: vibeWords.length > 0 ? vibeWords : undefined,
-        user_ingredients: userIngredients.length > 0 ? userIngredients : undefined
-    };
+function setLoadingState(loading) {
+    if (loading) {
+        submitBtn.disabled = true;
+        btnText.classList.add('hidden');
+        btnLoader.classList.remove('hidden');
+    } else {
+        submitBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
+    }
 }
 
 /**
- * Validate form data
+ * Display error message
  */
-function validateFormData(data) {
-    if (!data.style) {
-        showError('Please select or enter a scent style.');
-        return false;
-    }
+function showError(message) {
+    // Create error overlay
+    const errorOverlay = document.createElement('div');
+    errorOverlay.className = 'error-overlay';
+    errorOverlay.innerHTML = `
+        <div class="error-box">
+            <div class="error-icon">⚠️</div>
+            <h3>SYSTEM ERROR</h3>
+            <p>${message}</p>
+            <button onclick="this.parentElement.parentElement.remove()" class="error-close">
+                CLOSE
+            </button>
+        </div>
+    `;
     
-    if (!data.strength) {
-        showError('Please select a fragrance strength.');
-        return false;
-    }
+    document.body.appendChild(errorOverlay);
     
-    if (!data.bottle_size_ml || data.bottle_size_ml < 5 || data.bottle_size_ml > 100) {
-        showError('Bottle size must be between 5 and 100 ml.');
-        return false;
-    }
-    
-    return true;
-}
-
-/**
- * Call API to generate blends
- */
-async function generateBlends(preferences) {
-    const response = await fetch(`${API_BASE_URL}/api/generate_blends`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(preferences)
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Server error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data;
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (errorOverlay.parentElement) {
+            errorOverlay.remove();
+        }
+    }, 5000);
 }
 
 /**
  * Display recipes in the results section
  */
-function displayRecipes(data) {
-    const recipes = data.recipes || [];
+function displayRecipes(recipes) {
+    recipesContainer.innerHTML = '';
     
-    if (recipes.length === 0) {
-        showError('No recipes were generated. Please try different preferences.');
+    if (!recipes || recipes.length === 0) {
+        recipesContainer.innerHTML = '<p class="no-results">No recipes generated</p>';
+        results.classList.remove('hidden');
         return;
     }
     
-    // Clear previous recipes
-    recipesContainer.innerHTML = '';
-    
-    // Create recipe cards
     recipes.forEach((recipe, index) => {
-        const recipeCard = createRecipeCard(recipe, index + 1);
-        recipesContainer.appendChild(recipeCard);
+        const card = createRecipeCard(recipe, index);
+        recipesContainer.appendChild(card);
     });
     
-    // Show results section
-    showResults();
+    results.classList.remove('hidden');
+    
+    // Smooth scroll to results
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
  * Create a recipe card element
  */
-function createRecipeCard(recipe, number) {
+function createRecipeCard(recipe, index) {
     const card = document.createElement('div');
     card.className = 'recipe-card';
+    card.style.animationDelay = `${index * 0.1}s`;
     
-    // Header
-    const header = document.createElement('div');
-    header.className = 'recipe-header';
-    header.innerHTML = `
-        <h3>Recipe ${number}: ${escapeHtml(recipe.name || 'Untitled')}</h3>
-        <p class="recipe-description">${escapeHtml(recipe.description || '')}</p>
-    `;
-    card.appendChild(header);
-    
-    // Notes Section
-    if (recipe.notes) {
-        const notesDiv = document.createElement('div');
-        notesDiv.className = 'notes-section';
-        notesDiv.innerHTML = `
-            <h4>Fragrance Notes</h4>
-            <div class="notes-grid">
-                <div class="note-category">
-                    <strong>Top Notes</strong>
-                    <p>${recipe.notes.top ? recipe.notes.top.map(escapeHtml).join(', ') : 'None'}</p>
-                </div>
-                <div class="note-category">
-                    <strong>Heart Notes</strong>
-                    <p>${recipe.notes.heart ? recipe.notes.heart.map(escapeHtml).join(', ') : 'None'}</p>
-                </div>
-                <div class="note-category">
-                    <strong>Base Notes</strong>
-                    <p>${recipe.notes.base ? recipe.notes.base.map(escapeHtml).join(', ') : 'None'}</p>
-                </div>
+    // Notes sections
+    const notesHTML = `
+        <div class="notes-section">
+            <div class="notes-title">TOP NOTES</div>
+            <div class="notes-list">
+                ${recipe.notes.top.map(note => `<span class="note-tag">${note}</span>`).join('')}
             </div>
-        `;
-        card.appendChild(notesDiv);
-    }
+        </div>
+        <div class="notes-section">
+            <div class="notes-title">HEART NOTES</div>
+            <div class="notes-list">
+                ${recipe.notes.heart.map(note => `<span class="note-tag">${note}</span>`).join('')}
+            </div>
+        </div>
+        <div class="notes-section">
+            <div class="notes-title">BASE NOTES</div>
+            <div class="notes-list">
+                ${recipe.notes.base.map(note => `<span class="note-tag">${note}</span>`).join('')}
+            </div>
+        </div>
+    `;
     
-    // Ingredients Table
-    if (recipe.ingredients && recipe.ingredients.length > 0) {
-        const ingredientsDiv = document.createElement('div');
-        ingredientsDiv.className = 'ingredients-section';
-        ingredientsDiv.innerHTML = `
-            <h4>Ingredients & Proportions</h4>
-            <table class="ingredients-table">
-                <thead>
+    // Ingredients table
+    const ingredientsHTML = `
+        <table class="ingredients-table">
+            <thead>
+                <tr>
+                    <th>MATERIAL</th>
+                    <th>ROLE</th>
+                    <th>PERCENT</th>
+                    <th>DROPS</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${recipe.ingredients.map(ing => `
                     <tr>
-                        <th>Material</th>
-                        <th>Role</th>
-                        <th>Percentage</th>
-                        <th>Drops</th>
+                        <td>${ing.material}</td>
+                        <td>${ing.role.toUpperCase()}</td>
+                        <td>${ing.percent}%</td>
+                        <td>${ing.drops_for_bottle}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    ${recipe.ingredients.map(ing => `
-                        <tr>
-                            <td>${escapeHtml(ing.material || '')}</td>
-                            <td><span class="role-badge role-${ing.role}">${escapeHtml(ing.role || '')}</span></td>
-                            <td>${ing.percent || 0}%</td>
-                            <td>${ing.drops_for_bottle || 0} drops</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-        
-        // Add carrier info if present
-        if (recipe.carrier && recipe.carrier.material) {
-            const carrierNote = document.createElement('p');
-            carrierNote.className = 'carrier-note';
-            carrierNote.innerHTML = `<strong>Carrier Oil:</strong> ${escapeHtml(recipe.carrier.material)}`;
-            ingredientsDiv.appendChild(carrierNote);
-        }
-        
-        card.appendChild(ingredientsDiv);
-    }
+                `).join('')}
+            </tbody>
+        </table>
+    `;
     
     // Instructions
-    if (recipe.instructions && recipe.instructions.length > 0) {
-        const instructionsDiv = document.createElement('div');
-        instructionsDiv.className = 'instructions-section';
-        instructionsDiv.innerHTML = `
-            <h4>Mixing Instructions</h4>
+    const instructionsHTML = `
+        <div class="instructions-section">
+            <div class="notes-title">MIXING INSTRUCTIONS</div>
             <ol class="instructions-list">
-                ${recipe.instructions.map(inst => `<li>${escapeHtml(inst)}</li>`).join('')}
+                ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
             </ol>
-        `;
-        card.appendChild(instructionsDiv);
-    }
+        </div>
+    `;
     
-    // Safety Note
-    if (recipe.safety_note) {
-        const safetyDiv = document.createElement('div');
-        safetyDiv.className = 'safety-note';
-        safetyDiv.innerHTML = `
-            <strong>⚠️ Safety Note:</strong> ${escapeHtml(recipe.safety_note)}
-        `;
-        card.appendChild(safetyDiv);
-    }
+    // Carrier oil info
+    const carrierHTML = recipe.carrier ? `
+        <div class="carrier-info">
+            <strong>Carrier Oil:</strong> ${recipe.carrier.material}
+        </div>
+    ` : '';
+    
+    // Safety note
+    const safetyHTML = recipe.safety_note ? `
+        <div class="safety-note">
+            <strong>⚠️ SAFETY NOTE:</strong> ${recipe.safety_note}
+        </div>
+    ` : '';
+    
+    card.innerHTML = `
+        <h3 class="recipe-name">${recipe.name}</h3>
+        <p class="recipe-description">${recipe.description}</p>
+        ${notesHTML}
+        <div class="notes-title">FORMULATION</div>
+        ${ingredientsHTML}
+        ${carrierHTML}
+        ${instructionsHTML}
+        ${safetyHTML}
+    `;
     
     return card;
 }
 
-/**
- * Show loading state
- */
-function showLoading() {
-    loadingDiv.style.display = 'block';
-    generateBtn.disabled = true;
-    generateBtn.textContent = 'Generating...';
-}
+// Add styles for error overlay
+const style = document.createElement('style');
+style.textContent = `
+    .error-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .error-box {
+        background: var(--bg-card);
+        border: 2px solid var(--danger);
+        padding: 2rem;
+        max-width: 500px;
+        text-align: center;
+        clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+        animation: slideIn 0.3s ease;
+    }
+    
+    .error-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .error-box h3 {
+        font-family: var(--font-primary);
+        color: var(--danger);
+        letter-spacing: 0.2em;
+        margin-bottom: 1rem;
+    }
+    
+    .error-box p {
+        color: var(--metal-light);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .error-close {
+        font-family: var(--font-primary);
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        padding: 0.75rem 2rem;
+        background: var(--danger);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition-med);
+        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    }
+    
+    .error-close:hover {
+        box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+        transform: translateY(-2px);
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .no-results {
+        text-align: center;
+        color: var(--metal-med);
+        padding: 2rem;
+        font-size: 1.2rem;
+    }
+    
+    .carrier-info {
+        padding: 1rem;
+        background: var(--bg-elevated);
+        border-left: 3px solid var(--accent);
+        margin: 1rem 0;
+        color: var(--metal-light);
+    }
+`;
+document.head.appendChild(style);
 
-/**
- * Hide loading state
- */
-function hideLoading() {
-    loadingDiv.style.display = 'none';
-    generateBtn.disabled = false;
-    generateBtn.textContent = '✨ Generate Recipes';
-}
-
-/**
- * Show error message
- */
-function showError(message) {
-    errorText.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-/**
- * Hide error message
- */
-function hideError() {
-    errorDiv.style.display = 'none';
-    errorText.textContent = '';
-}
-
-/**
- * Show results section
- */
-function showResults() {
-    resultsSection.style.display = 'block';
-}
-
-/**
- * Hide results section
- */
-function hideResults() {
-    resultsSection.style.display = 'none';
-}
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return String(text).replace(/[&<>"']/g, m => map[m]);
-}
+console.log('🎨 Perfume Pal Tech UI initialized');

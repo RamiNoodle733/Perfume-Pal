@@ -30,10 +30,14 @@ def configure_genai():
     """Configure the Google Generative AI client."""
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        raise WorkflowError("GOOGLE_API_KEY environment variable not set")
+        logger.warning("GOOGLE_API_KEY environment variable not set - will be configured in agent initialization")
+        return
     
-    genai.configure(api_key=api_key)
-    logger.info("Google Generative AI configured successfully")
+    try:
+        genai.configure(api_key=api_key)
+        logger.info("Google Generative AI configured successfully")
+    except Exception as e:
+        logger.debug(f"genai.configure called but may already be configured: {e}")
 
 
 # Agent 1: Scent Planner
@@ -45,8 +49,16 @@ class ScentPlannerAgent:
     This brief is then used by the Formula Architect to generate recipes.
     """
     
-    def __init__(self, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, model_name: str = "models/gemini-flash-latest"):
         """Initialize the Scent Planner agent."""
+        # Ensure genai is configured
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            try:
+                genai.configure(api_key=api_key)
+            except:
+                pass  # Already configured
+        
         self.model_name = model_name
         self.model = genai.GenerativeModel(model_name)
         
@@ -99,12 +111,13 @@ Return ONLY the JSON brief with no additional text."""
 
             logger.info(f"Scent Planner processing preferences: {user_preferences['style']}")
             
-            # Generate response
+            # Generate response with JSON mode
             response = self.model.generate_content(
                 self.system_prompt + "\n\n" + prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.7,
                     max_output_tokens=1024,
+                    response_mime_type="application/json"
                 )
             )
             
@@ -113,10 +126,10 @@ Return ONLY the JSON brief with no additional text."""
             
             # Remove markdown code blocks if present
             if response_text.startswith("```"):
-                response_text = response_text.split("```")[1]
+                lines = response_text.split("\n")
+                response_text = "\n".join(lines[1:-1])
                 if response_text.startswith("json"):
-                    response_text = response_text[4:]
-                response_text = response_text.strip()
+                    response_text = response_text[4:].strip()
             
             brief = json.loads(response_text)
             logger.info("Scent Planner brief created successfully")
@@ -141,8 +154,16 @@ class FormulaArchitectAgent:
     Produces recipes with specific ingredients, proportions, and mixing instructions.
     """
     
-    def __init__(self, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, model_name: str = "models/gemini-flash-latest"):
         """Initialize the Formula Architect agent."""
+        # Ensure genai is configured
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            try:
+                genai.configure(api_key=api_key)
+            except:
+                pass  # Already configured
+        
         self.model_name = model_name
         self.model = genai.GenerativeModel(model_name)
         
@@ -232,12 +253,13 @@ Return ONLY the JSON with recipes array. No additional text."""
 
             logger.info(f"Formula Architect generating {brief.get('recipes_to_generate', 2)} recipe(s)")
             
-            # Generate response
+            # Generate response with JSON mode
             response = self.model.generate_content(
                 self.system_prompt + "\n\n" + prompt,
                 generation_config=genai.GenerationConfig(
-                    temperature=0.8,
-                    max_output_tokens=2048,
+                    temperature=0.7,
+                    max_output_tokens=3072,
+                    response_mime_type="application/json"
                 )
             )
             
@@ -246,19 +268,33 @@ Return ONLY the JSON with recipes array. No additional text."""
             
             # Remove markdown code blocks if present
             if response_text.startswith("```"):
-                response_text = response_text.split("```")[1]
+                lines = response_text.split("\n")
+                # Remove first line (```) and last line (```)
+                response_text = "\n".join(lines[1:-1])
                 if response_text.startswith("json"):
-                    response_text = response_text[4:]
-                response_text = response_text.strip()
+                    response_text = response_text[4:].strip()
             
-            recipes = json.loads(response_text)
+            # Try to parse JSON
+            try:
+                recipes = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                # If JSON is malformed, try to find and extract just the JSON object
+                import re
+                # Look for JSON object pattern
+                json_match = re.search(r'\{[\s\S]*\}', response_text)
+                if json_match:
+                    response_text = json_match.group(0)
+                    recipes = json.loads(response_text)
+                else:
+                    raise e
+            
             logger.info(f"Formula Architect generated {len(recipes.get('recipes', []))} recipe(s)")
             
             return recipes
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse Formula Architect response as JSON: {e}")
-            logger.error(f"Response text: {response_text}")
+            logger.error(f"Response text (first 500 chars): {response_text[:500]}")
             raise WorkflowError(f"Formula Architect returned invalid JSON: {e}")
         except Exception as e:
             logger.error(f"Formula Architect error: {e}")
