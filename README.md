@@ -1,4 +1,4 @@
-# Perfume Pal 🌸
+# Perfume Pal
 
 **Cloud Run Hackathon 2025 - AI Agents Category**
 
