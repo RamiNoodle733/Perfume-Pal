@@ -380,4 +380,4 @@ Powered by:
 **Questions or Issues?**
 Open an issue on GitHub or contact via Devpost.
 
-**Happy fragrance crafting! 🌸✨**
+**Happy fragrance crafting! **
