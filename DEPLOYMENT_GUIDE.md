@@ -28,12 +28,13 @@ Already included in the repo to exclude unnecessary files from deployment.
 ## Step 4: Deploy to Cloud Run
 ```bash
 # Deploy with Cloud Build (automatically builds and deploys)
+# IMPORTANT: Replace YOUR_API_KEY_HERE with your actual Google API key
 gcloud run deploy perfume-pal \
   --source . \
   --region us-central1 \
   --platform managed \
   --allow-unauthenticated \
-  --set-env-vars GOOGLE_API_KEY=AIzaSyB56m7EIiYtHIMH7x-X14Y9gBp1515UzlU,GOOGLE_CLOUD_PROJECT=perfume-pal-project \
+  --set-env-vars GOOGLE_API_KEY=YOUR_API_KEY_HERE,GOOGLE_CLOUD_PROJECT=perfume-pal-project \
   --port 8080 \
   --memory 512Mi \
   --timeout 300s
@@ -74,9 +75,10 @@ gcloud run services logs read perfume-pal --region us-central1 --limit 50
 
 ### To update environment variables:
 ```bash
+# Replace YOUR_API_KEY_HERE with your actual API key
 gcloud run services update perfume-pal \
   --region us-central1 \
-  --set-env-vars GOOGLE_API_KEY=your-new-key
+  --set-env-vars GOOGLE_API_KEY=YOUR_API_KEY_HERE
 ```
 
 ### To redeploy after code changes:
