@@ -15,6 +15,7 @@ const mainApp = document.getElementById('main-app');
 const enterBtn = document.getElementById('enter-btn');
 
 // DOM Elements - Navigation
+const navLogo = document.querySelector('.nav-logo');
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
 
@@ -34,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Intro screen
     enterBtn.addEventListener('click', enterSystem);
+    
+    // Navigation - Logo click to return to intro
+    navLogo.addEventListener('click', returnToIntro);
     
     // Navigation
     navLinks.forEach(link => {
@@ -56,6 +60,26 @@ function enterSystem() {
     setTimeout(() => {
         mainApp.style.transition = 'opacity 0.5s ease';
         mainApp.style.opacity = '1';
+    }, 50);
+}
+
+/**
+ * Return to intro screen
+ */
+function returnToIntro() {
+    mainApp.classList.add('hidden');
+    introScreen.classList.remove('hidden');
+    
+    // Reset form and results
+    form.reset();
+    results.classList.add('hidden');
+    recipesContainer.innerHTML = '';
+    
+    // Smooth fade in effect
+    introScreen.style.opacity = '0';
+    setTimeout(() => {
+        introScreen.style.transition = 'opacity 0.5s ease';
+        introScreen.style.opacity = '1';
     }, 50);
 }
 
