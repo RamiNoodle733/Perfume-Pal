@@ -502,6 +502,21 @@ body {
 
 select.form-input {
     cursor: pointer;
+    background-color: var(--bg-input);
+    color: var(--metal-light);
+}
+
+select.form-input option {
+    background-color: var(--bg-card);
+    color: var(--metal-light);
+    padding: var(--spacing-sm);
+}
+
+select.form-input option:hover,
+select.form-input option:focus,
+select.form-input option:checked {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: var(--bg-main);
 }
 
 textarea.form-input {
